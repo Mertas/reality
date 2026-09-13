@@ -11,26 +11,28 @@ export function ChapterSources() {
       {S.intro ? <p className="lead">{S.intro}</p> : null}
 
       {S.table.length ? (
-        <table className="tbl">
-          <thead>
-            <tr>
-              <th>что</th>
-              <th>где</th>
-              <th>статус</th>
-            </tr>
-          </thead>
-          <tbody>
-            {S.table.map((r, i) => (
-              <tr key={i}>
-                <td>{r.what}</td>
-                <td>{r.where}</td>
-                <td>
-                  <QuoteBadge status={r.status} />
-                </td>
+        <div className="tbl-wrap">
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>что</th>
+                <th>где</th>
+                <th>статус</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {S.table.map((r, i) => (
+                <tr key={i}>
+                  <td>{r.what}</td>
+                  <td>{r.where}</td>
+                  <td>
+                    <QuoteBadge status={r.status} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : null}
 
       {S.honesty?.length ? (

@@ -305,17 +305,29 @@ export function useDemoEngine(config: DemoEngineConfig): DemoEngine {
       onResizeRef.current?.();
     };
 
+    // observer не должен синхронно мутировать layout: иначе браузер сообщает
+    // «ResizeObserver loop completed with undelivered notifications»; откладываем в rAF
+    let rafId = 0;
+    const schedule = (): void => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = 0;
+        relayout();
+      });
+    };
+
     let ro: ResizeObserver | null = null;
     if (typeof ResizeObserver !== 'undefined') {
-      ro = new ResizeObserver(relayout);
+      ro = new ResizeObserver(schedule);
       ro.observe(parentEl);
     } else {
-      window.addEventListener('resize', relayout);
+      window.addEventListener('resize', schedule);
     }
     relayout();
     return () => {
+      if (rafId) window.cancelAnimationFrame(rafId);
       if (ro) ro.disconnect();
-      else window.removeEventListener('resize', relayout);
+      else window.removeEventListener('resize', schedule);
     };
   }, [canvasRef, boxRef, canvas]);
 
