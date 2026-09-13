@@ -1,0 +1,456 @@
+/* ==========================================================================
+   «Это вода» — глава «Практика»: стили модуля.
+   Префикс классов — .practice-. Цвета, радиусы и шрифты — только через
+   токены из css/style.css. Глобальные селекторы не трогаем.
+   ========================================================================== */
+
+.practice {
+  font-family: var(--font-ui);
+  color: var(--ink);
+  margin-top: 24px;
+}
+
+.practice-sec {
+  padding: 30px 0 6px;
+  border-top: 1px solid var(--line);
+}
+.practice-sec:first-of-type { border-top: 0; padding-top: 0; }
+
+.practice-h {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  line-height: 1.25;
+  font-weight: 600;
+  margin: 0 0 14px;
+  letter-spacing: -.01em;
+}
+
+.practice-sub {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 26px 0 8px;
+}
+
+/* ---------- сегодня ---------- */
+
+.practice-today {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 18px;
+  margin-bottom: 4px;
+}
+
+.practice-date {
+  font-family: var(--font-serif);
+  font-size: 19px;
+  color: var(--ink);
+}
+
+.practice-streak {
+  font-size: 13.5px;
+  color: var(--ink-dim);
+}
+
+.practice-stats {
+  flex-basis: 100%;
+  margin: 2px 0 0;
+}
+
+.practice-note {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--warn);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--warn);
+  border-radius: var(--radius-s);
+  padding: 10px 14px;
+  margin: 0 0 18px;
+}
+
+/* ---------- вода дня ---------- */
+
+.practice-water {
+  position: relative;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px 16px;
+  margin: 18px 0 26px;
+  overflow: hidden;
+}
+
+.practice-water::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(520px 180px at 12% 0%, var(--water-soft), transparent 70%);
+}
+
+.practice-water > * { position: relative; }
+
+.practice-water .kicker { margin-bottom: 8px; }
+
+.practice-water-line {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 19px;
+  line-height: 1.6;
+  color: var(--ink);
+  margin: 0 0 12px;
+}
+
+.practice-water-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.practice-water-actions .hint { margin: 0; }
+
+/* ---------- чек-лист практик ---------- */
+
+.practice-list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+}
+
+.practice-item {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 14px 16px 12px;
+  margin-bottom: 10px;
+  transition: border-color .2s ease, background .2s ease;
+}
+
+.practice-item:hover { border-color: var(--line-strong); }
+
+.practice-item.done {
+  background: var(--panel-2);
+  border-color: rgba(143,200,160,.30);
+}
+
+.practice-item-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.practice-check-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.practice-check {
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.practice-title {
+  font-size: 15.5px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.practice-item.done .practice-title {
+  color: var(--ink-dim);
+  text-decoration: line-through;
+  text-decoration-color: var(--line-strong);
+}
+
+.practice-min {
+  flex: 0 0 auto;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.practice-why {
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink-dim);
+  margin: 8px 0 0;
+}
+
+.practice-item-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.practice-item-foot:empty { display: none; }
+
+.practice-demo-btn { flex: 0 0 auto; }
+
+/* сворачиваемое «как» */
+
+.practice-how { margin: 0; }
+
+.practice-how > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 12.5px;
+  letter-spacing: .04em;
+  color: var(--water);
+  padding: 2px 0;
+  list-style: none;
+  user-select: none;
+}
+
+.practice-how > summary::-webkit-details-marker { display: none; }
+
+.practice-how > summary::after {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-top: -2px;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform .2s ease;
+}
+
+.practice-how[open] > summary::after { transform: rotate(-135deg); }
+
+.practice-how-body {
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ink-dim);
+  border-left: 2px solid var(--line);
+  padding: 8px 0 2px 12px;
+  margin-top: 8px;
+}
+
+/* ---------- заметка о дне ---------- */
+
+.practice-notewrap {
+  display: block;
+  margin: 16px 0 0;
+}
+
+.practice-note-label {
+  display: block;
+  font-size: 12.5px;
+  letter-spacing: .04em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.practice-input,
+.practice-textarea {
+  width: 100%;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--bg-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  padding: 10px 12px;
+  transition: border-color .2s ease;
+}
+
+.practice-textarea {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  line-height: 1.7;
+  margin-top: 14px;
+  resize: vertical;
+  min-height: 110px;
+}
+
+.practice-input::placeholder,
+.practice-textarea::placeholder { color: var(--muted); opacity: .8; }
+
+.practice-input:hover,
+.practice-textarea:hover { border-color: var(--ink-dim); }
+
+.practice-input:focus,
+.practice-textarea:focus {
+  outline: none;
+  border-color: var(--water);
+  box-shadow: 0 0 0 3px var(--water-soft);
+}
+
+/* ---------- дневник ---------- */
+
+.practice-prompt {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 18px 12px;
+  margin: 0 0 4px;
+}
+
+.practice-prompt .kicker { margin-bottom: 6px; }
+
+.practice-prompt-text {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--ink);
+  margin: 0 0 10px;
+}
+
+.practice-prompt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.practice-prompt-actions .hint { margin: 0; }
+
+.practice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 0;
+}
+.practice-actions .hint { margin: 0; }
+
+.practice-journal-actions { margin-bottom: 8px; }
+
+.practice-entries {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+}
+
+.practice-entry {
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--water);
+  border-radius: var(--radius-s);
+  background: var(--panel);
+  padding: 12px 14px 8px;
+  margin-bottom: 10px;
+}
+
+.practice-entry-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin-bottom: 6px;
+}
+
+.practice-entry-date {
+  font-size: 12.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.practice-entry-prompt {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--water);
+}
+
+.practice-entry-text {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.practice-entry-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.practice-link {
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+}
+
+.practice-link:hover { color: var(--ink-dim); }
+
+/* ---------- данные: экспорт и сброс ---------- */
+
+.practice-fallback { margin-top: 14px; }
+.practice-fallback[hidden] { display: none; }
+.practice-fallback textarea { margin-top: 8px; }
+
+.practice-danger {
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.practice-status {
+  min-height: 1.2em;
+  margin: 16px 0 0;
+  color: var(--water);
+}
+
+.practice-empty { margin: 16px 0 0; }
+
+/* ---------- кнопки: страховка, если модуль живёт без style.css ---------- */
+
+.practice button[disabled] { opacity: .45; cursor: not-allowed; }
+
+/* ---------- адаптив ---------- */
+
+@media (max-width: 760px) {
+  .practice-sec { padding: 24px 0 4px; }
+  .practice-h { font-size: 21px; }
+  .practice-water { padding: 15px 15px 13px; }
+  .practice-water-line { font-size: 17.5px; }
+  .practice-item { padding: 13px 13px 11px; }
+  .practice-today { gap: 4px 12px; }
+}
+
+@media (max-width: 560px) {
+  .practice-today { display: block; }
+  .practice-date { display: block; margin-bottom: 2px; }
+  .practice-streak { display: block; }
+  .practice-actions,
+  .practice-prompt-actions,
+  .practice-water-actions,
+  .practice-item-foot { gap: 8px; }
+  .practice-actions > .btn,
+  .practice-actions > .btn-ghost { flex: 1 1 100%; text-align: center; }
+  .practice-item-head { align-items: flex-start; }
+  .practice-check { margin-top: 3px; }
+  .practice-entry { padding: 11px 12px 7px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .practice-item,
+  .practice-input,
+  .practice-textarea,
+  .practice-how > summary::after { transition: none; }
+}

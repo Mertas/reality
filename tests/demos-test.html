@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Тест демо — Это вода</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/demos.css">
+<style>
+  /* только для служебной страницы */
+  .t-wrap { max-width: 900px; margin: 0 auto; padding: 30px 20px 90px; position: relative; z-index: 1; }
+  .t-wrap h1 { font-size: 26px; margin: 0 0 6px; }
+  .t-list { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 6px; }
+  .t-list li { font-family: var(--font-ui); font-size: 13.5px; line-height: 1.6; color: var(--ink-dim); }
+  .t-list li .t-res { font-weight: 600; }
+  .t-list li.ok .t-res { color: var(--ok); }
+  .t-list li.bad .t-res { color: var(--warn); }
+  .t-demo { margin: 34px 0; }
+  .t-log { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; font-family: var(--font-ui); font-size: 13px; }
+  .t-log li { color: var(--ink-dim); border-left: 2px solid var(--line-strong); padding-left: 12px; }
+  .t-bare { margin-top: 12px; }
+</style>
+</head>
+<body>
+
+<div class="t-wrap">
+  <h1>Песочница демо</h1>
+  <p class="hint">Служебная страница. Монтирует все семь демо через <code>Demos.mount(id, el, opts)</code>
+    в такую же разметку, как в главах, и показывает результаты проверок API.</p>
+
+  <div class="panel" id="t-summary">
+    <p class="kicker">проверки</p>
+    <div class="demo-row" style="margin-top:0">
+      <button class="btn btn-s" type="button" id="t-api">Проверить API</button>
+      <button class="btn-ghost btn-s" type="button" id="t-remount">Смонтировать заново</button>
+      <button class="btn-ghost btn-s" type="button" id="t-destroy">Уничтожить все</button>
+    </div>
+    <ul class="t-list" id="t-list"></ul>
+  </div>
+
+  <div class="panel">
+    <p class="kicker">наблюдения</p>
+    <p class="hint" style="margin:0">Сюда приходят вызовы <code>opts.onComplete(payload)</code> и записи в дневник.</p>
+    <ul class="t-log" id="t-log"></ul>
+  </div>
+
+  <div id="t-demos"></div>
+
+  <div class="panel">
+    <p class="kicker">монтаж вне слота</p>
+    <p class="hint" style="margin:0">Демо, смонтированное в «голый» контейнер (без <code>.demo-body</code>).</p>
+    <div class="t-bare" id="t-bare"></div>
+  </div>
+</div>
+
+<script src="../js/demos.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var IDS = ['troxler', 'blindspot', 'gorilla', 'netineti', 'looking', 'contrast', 'cut'];
+  var TITLES = {
+    troxler: 'Гаснущие пятна',
+    blindspot: 'Найди своё слепое пятно',
+    gorilla: 'Горилла',
+    netineti: 'Нети нети',
+    looking: 'Посмотри на то, что смотрит',
+    contrast: 'Нет фона — нет фигуры',
+    cut: 'Разрез фон Неймана'
+  };
+  var NOTES = {
+    troxler: 'Наведи мышь на сцену и не двигай: через 20 с пятна должны погаснуть. Сдвинь мышь — вернутся.',
+    blindspot: 'Ползунок двигает точку; справа от креста — инструкция «закрой правый глаз, смотри левым».',
+    gorilla: 'Нажми «Начать раунд» — раунд идёт ~20 с, потом вопросы.',
+    netineti: 'Убирай чипсы по одному: на полотне гаснут детали, в журнале растут строки «не это».',
+    looking: 'Кнопка запускает 90 секунд (для проверки можно завершить раньше) и блок заметки.',
+    contrast: 'Ползунок от 100% к 0%: при нуле фигура совпадёт с фоном.',
+    cut: 'Ползунок двигает разрез по цепи из шести узлов; на последнем положении — финальная строка.'
+  };
+
+  var list = document.getElementById('t-list');
+  var logEl = document.getElementById('t-log');
+  var demosHost = document.getElementById('t-demos');
+  var bareHost = document.getElementById('t-bare');
+  var results = [];
+  var errors = [];
+  var instances = {};
+  var all = [];
+  var extra = [];
+
+  /* ---- среда теста: заглушка Practice и перехват ошибок ---- */
+
+  window.Practice = {
+    addJournal: function (prompt, text) {
+      note('Practice.addJournal: «' + prompt + '» / ' + text.length + ' симв.');
+      return { ok: true };
+    }
+  };
+
+  window.addEventListener('error', function (e) {
+    errors.push(String(e.message || e.error || 'ошибка в скрипте'));
+    render();
+  });
+  window.addEventListener('unhandledrejection', function () {
+    errors.push('необработанный promise');
+    render();
+  });
+
+  function note(text) {
+    var li = document.createElement('li');
+    li.textContent = text;
+    logEl.appendChild(li);
+  }
+
+  function say(name, ok, detail) {
+    results.push({ name: name, ok: !!ok, detail: detail || '' });
+    render();
+  }
+
+  function render() {
+    list.innerHTML = '';
+    var bad = 0;
+    results.forEach(function (r) {
+      if (!r.ok) bad++;
+      var li = document.createElement('li');
+      li.className = r.ok ? 'ok' : 'bad';
+      var res = document.createElement('span');
+      res.className = 't-res';
+      res.textContent = r.ok ? 'ок' : 'нет';
+      li.appendChild(res);
+      li.appendChild(document.createTextNode(' · ' + r.name + (r.detail ? ' — ' + r.detail : '')));
+      list.appendChild(li);
+    });
+    var errLi = document.createElement('li');
+    errLi.className = errors.length ? 'bad' : 'ok';
+    var errRes = document.createElement('span');
+    errRes.className = 't-res';
+    errRes.textContent = errors.length ? 'нет' : 'ок';
+    errLi.appendChild(errRes);
+    errLi.appendChild(document.createTextNode(' · ошибки в консоли: ' +
+      (errors.length ? errors.join(' | ') : 'не поймано ни одной')));
+    list.appendChild(errLi);
+    if (bad || errors.length) list.parentNode.setAttribute('data-state', 'bad');
+    else list.parentNode.setAttribute('data-state', 'ok');
+  }
+
+  /* ---- построение слотов ---- */
+
+  function buildSlot(id) {
+    var slot = document.createElement('div');
+    slot.className = 'demo-slot';
+    slot.setAttribute('data-demo-id', id);
+    var head = document.createElement('div');
+    head.className = 'demo-head';
+    var kicker = document.createElement('p');
+    kicker.className = 'kicker';
+    kicker.textContent = 'демо · ' + id;
+    var title = document.createElement('h3');
+    title.className = 'demo-title';
+    title.textContent = TITLES[id];
+    var hint = document.createElement('p');
+    hint.className = 'hint';
+    hint.textContent = NOTES[id];
+    head.appendChild(kicker);
+    head.appendChild(title);
+    head.appendChild(hint);
+    var body = document.createElement('div');
+    body.className = 'demo-body';
+    slot.appendChild(head);
+    slot.appendChild(body);
+    return slot;
+  }
+
+  function onComplete(payload) {
+    var parts = [];
+    Object.keys(payload || {}).forEach(function (k) { parts.push(k + '=' + payload[k]); });
+    note('onComplete: ' + parts.join(', '));
+  }
+
+  function mountAll() {
+    all.forEach(function (inst) { if (inst && !inst.destroyed) inst.destroy(); });
+    all = [];
+    instances = {};
+    demosHost.innerHTML = '';
+    results = [];
+
+    if (!window.Demos) {
+      say('window.Demos существует', false, 'скрипт не загрузился');
+      render();
+      return;
+    }
+    say('window.Demos существует', true);
+    say('Demos.items — 7 демо', Object.keys(Demos.items).length === 7,
+      'id: ' + Object.keys(Demos.items).join(', '));
+    say('Demos.has() отвечает верно', Demos.has('troxler') === true && Demos.has('нет-такого') === false);
+
+    IDS.forEach(function (id) {
+      var slot = buildSlot(id);
+      demosHost.appendChild(slot);
+      var inst = Demos.mount(id, slot, { onComplete: onComplete, id: id });
+      instances[id] = inst;
+      if (inst) all.push(inst);
+      var body = slot.querySelector('.demo-body');
+      say(id + ': экземпляр создан', !!inst && typeof inst.destroy === 'function');
+      say(id + ': демо нарисовано', !!(body && body.children.length > 0 && body.querySelector('.demo')));
+      say(id + ': шапка слота не стёрта', !!slot.querySelector('.demo-head .demo-title'));
+      say(id + ': заголовок в items', !!(Demos.items[id] && Demos.items[id].title === TITLES[id]),
+        Demos.items[id] ? Demos.items[id].title : '');
+    });
+
+    say('mount(неизвестный id) → null', Demos.mount('нет-такого', document.createElement('div')) === null);
+
+    /* --- два независимых экземпляра одного демо --- */
+    var s1 = buildSlot('troxler');
+    var s2 = buildSlot('troxler');
+    demosHost.appendChild(s1);
+    demosHost.appendChild(s2);
+    var a = Demos.mount('troxler', s1, {});
+    var b = Demos.mount('troxler', s2, {});
+    if (a) all.push(a);
+    if (b) all.push(b);
+    say('troxler × 2: два разных экземпляра', !!a && !!b && a !== b);
+    var aCanvas = s1.querySelector('canvas');
+    var bCanvas = s2.querySelector('canvas');
+    say('troxler × 2: у каждого свой canvas', !!aCanvas && !!bCanvas && aCanvas !== bCanvas);
+    a.destroy();
+    say('destroy(): экземпляр помечен уничтоженным', a.destroyed === true && a._raf === 0);
+    say('destroy(): убрал только своё', s1.querySelector('canvas') === null && s2.querySelector('canvas') === bCanvas);
+    say('второй экземпляр жив после destroy первого', b.destroyed === false && !!b.box);
+    extra.push({ slot: s1, inst: a });
+    extra.push({ slot: s2, inst: b });
+
+    /* --- повторный mount в тот же элемент не оставляет старый экземпляр --- */
+    var again = Demos.mount('contrast', s2, {});
+    if (again) all.push(again);
+    say('повторный mount уничтожил прошлый экземпляр', b.destroyed === true && again !== b);
+    say('новый экземпляр встал на место', !!s2.querySelector('.demo-contrast'));
+
+    /* --- монтаж в «голый» контейнер --- */
+    bareHost.innerHTML = '';
+    var bare = Demos.mount('cut', bareHost, {});
+    if (bare) all.push(bare);
+    say('mount в контейнер без .demo-body', !!bare && !!bareHost.querySelector('.demo'));
+    say('demo-body не обязателен: шапка пустая', bareHost.children.length === 1);
+
+    render();
+  }
+
+  function destroyAll() {
+    var n = 0;
+    all.forEach(function (inst) {
+      if (inst && !inst.destroyed) { inst.destroy(); n++; }
+    });
+    extra.forEach(function (x) { if (x.inst && !x.inst.destroyed) { x.inst.destroy(); n++; } });
+    var bareInst = bareHost.__demo;
+    if (bareInst && !bareInst.destroyed) { bareInst.destroy(); n++; }
+    say('уничтожено экземпляров', n > 0, String(n));
+  }
+
+  document.getElementById('t-api').addEventListener('click', function () { mountAll(); });
+  document.getElementById('t-remount').addEventListener('click', function () { mountAll(); });
+  document.getElementById('t-destroy').addEventListener('click', destroyAll);
+
+  mountAll();
+})();
+</script>
+</body>
+</html>

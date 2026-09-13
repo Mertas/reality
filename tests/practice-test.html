@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Практика — тестовая страница модуля</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/practice.css">
+<style>
+  /* служебные стили самой тестовой страницы (в прод не идут) */
+  .test-bar {
+    position: sticky; top: 0; z-index: 60;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    padding: 10px 16px;
+    background: rgba(10,15,23,.92);
+    border-bottom: 1px solid var(--line);
+    font-family: var(--font-ui); font-size: 13px;
+  }
+  .test-bar b { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+  .test-bar .test-info { font-family: var(--font-ui); font-size: 12.5px; color: var(--muted); }
+  .test-wrap { max-width: 860px; margin: 0 auto; padding: 26px 18px 90px; }
+  .test-wrap > .chapter { border-top: 0; padding-top: 10px; }
+  #test-log {
+    font-family: ui-monospace, Consolas, monospace; font-size: 12px; line-height: 1.6;
+    white-space: pre-wrap; overflow-wrap: anywhere;
+    color: var(--ink-dim); background: var(--bg-2);
+    border: 1px solid var(--line); border-radius: var(--radius-s);
+    padding: 12px 14px; margin-top: 26px; max-height: 320px; overflow: auto;
+  }
+</style>
+</head>
+<body>
+
+<div class="test-bar">
+  <b>тест практики</b>
+  <button type="button" class="btn-ghost btn-s" id="t-reload">перерисовать</button>
+  <button type="button" class="btn-ghost btn-s" id="t-state">состояние</button>
+  <button type="button" class="btn-ghost btn-s" id="t-add">addJournal()</button>
+  <button type="button" class="btn-ghost btn-s" id="t-nodata">режим без data</button>
+  <button type="button" class="btn-ghost btn-s" id="t-wipe">стереть localStorage</button>
+  <span class="test-info" id="t-info"></span>
+</div>
+
+<div class="test-wrap">
+  <section class="chapter" id="practice-root"></section>
+  <pre id="test-log">журнал теста</pre>
+</div>
+
+<script src="../js/data.js"></script>
+<script src="../js/practice.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var errors = [];
+  window.__testErrors = errors;
+  window.addEventListener('error', function (e) {
+    errors.push('error: ' + (e && e.message ? e.message : String(e)));
+  });
+  var origError = console.error;
+  console.error = function () {
+    errors.push('console.error: ' + Array.prototype.join.call(arguments, ' '));
+    origError.apply(console, arguments);
+  };
+
+  var logEl = document.getElementById('test-log');
+  function log(line) {
+    logEl.textContent += '\n' + line;
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function dataSource() {
+    if (window.REALITY_DATA) return 'js/data.js';
+    return 'заглушка теста (data.js не загрузился)';
+  }
+
+  /* Если js/data.js ещё не написан — даём минимальные тестовые данные,
+     чтобы модуль было на чём проверить. Это НЕ контент сайта. */
+  function stubData() {
+    return {
+      meta: { title: 'Это вода (тестовые данные)' },
+      water: [
+        'Это вода.',
+        'Константа не несёт ни одного бита.',
+        'Информация — различие, которое создаёт различие.',
+        'Пропуск не выглядит пропуском.'
+      ],
+      practice: [
+        { id: 'blindspot', title: 'Слепое пятно у себя', why: 'Показать, что пропуск не выглядит пропуском.',
+          how: 'Закрой правый глаз. Смотри на крест левым и медленно веди экран, пока точка не исчезнет.\nДыры при этом не появится.',
+          minutes: 3, demoId: 'blindspot' },
+        { id: 'troxler', title: 'Гаснущие пятна', why: 'Неподвижный взгляд убирает то, что не меняется.',
+          how: 'Смотри на крест, не двигая глазами. Пятна на периферии погаснут.', minutes: 2, demoId: 'troxler' },
+        { id: 'looking', title: 'Посмотреть на то, что смотрит', why: 'Короткая тишина без задачи.',
+          how: 'Девяносто секунд ничего не искать. Заметить, что искать нечего.', minutes: 2, demoId: 'looking' },
+        { id: 'water-note', title: 'Заметка о воде', why: 'Одна строка в дневник — то, что сегодня было фоном.',
+          how: 'Вечером запиши в дневник одну строку: что сегодня работало незаметно.', minutes: 5 }
+      ]
+    };
+  }
+
+  var stub = false;
+  if (!window.REALITY_DATA) {
+    window.REALITY_DATA = stubData();
+    stub = true;
+  }
+
+  var root = document.getElementById('practice-root');
+  var infoEl = document.getElementById('t-info');
+
+  function info() {
+    var st = null;
+    try { st = window.Practice ? window.Practice.getState() : null; } catch (e) { st = null; }
+    var bits = [
+      'данные: ' + dataSource(),
+      'Practice: ' + (window.Practice ? 'есть' : 'НЕТ'),
+      'App: ' + (window.App ? 'есть' : 'нет'),
+      'Demos: ' + (window.Demos ? 'есть' : 'нет'),
+      'дней: ' + (st ? Object.keys(st.days || {}).length : '—'),
+      'записей: ' + (st ? (st.journal || []).length : '—'),
+      'ошибок: ' + errors.length
+    ];
+    infoEl.textContent = bits.join(' · ');
+  }
+
+  function init(withData) {
+    try {
+      window.Practice.init(root, withData === undefined ? window.REALITY_DATA : withData);
+      log('init: ок (' + dataSource() + ')');
+    } catch (e) {
+      errors.push('init: ' + e.message);
+      log('init: ошибка — ' + e.message);
+    }
+    info();
+  }
+
+  if (window.Practice) init();
+  else log('Практика: window.Practice не загрузился (проверь путь ../js/practice.js)');
+
+  document.getElementById('t-reload').addEventListener('click', function () { init(); });
+  document.getElementById('t-nodata').addEventListener('click', function () {
+    log('проверка фоллбэков: init(root, {}) — без water и practice');
+    init({});
+    info();
+  });
+  document.getElementById('t-state').addEventListener('click', function () {
+    var st = window.Practice.getState();
+    log('состояние: ' + JSON.stringify(st));
+    info();
+  });
+  document.getElementById('t-add').addEventListener('click', function () {
+    var e = window.Practice.addJournal('тестовый промпт', 'Строка, добавленная вызовом Practice.addJournal().');
+    log('addJournal → ' + (e ? 'запись добавлена, ' + e.ts : 'отказ (пустой текст)'));
+    info();
+  });
+  document.getElementById('t-wipe').addEventListener('click', function () {
+    try {
+      window.localStorage.removeItem('reality.practice.v1');
+      log('localStorage[reality.practice.v1] удалён — нажми «перерисовать»');
+    } catch (e) {
+      log('localStorage недоступен: ' + e.message);
+    }
+    info();
+  });
+
+  window.addEventListener('error', info);
+  log('проверка: отметки — чекбоксы в «Практиках дня»; дневник — textarea + «Сохранить запись»; экспорт и сброс — в блоке «Данные».');
+  log('тестовые данные: ' + (stub ? 'да (заглушка)' : 'нет') + '; ключ хранилища: ' + (window.Practice ? window.Practice.storageKey : '—'));
+  info();
+})();
+</script>
+</body>
+</html>
