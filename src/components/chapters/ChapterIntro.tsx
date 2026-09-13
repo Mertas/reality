@@ -9,7 +9,7 @@ export function ChapterIntro() {
   const d = content.intro;
 
   return (
-    <Chapter id="ch-intro" kicker={d.kicker ?? 'reality · вода'} title={content.meta.title}>
+    <Chapter id="ch-intro" level={1} kicker={d.kicker ?? 'reality · вода'} title={content.meta.title}>
       <p className="lead">{content.meta.subtitle}</p>
       {d.lead.map((t, i) => (
         <p key={i}>{t}</p>

@@ -11,6 +11,7 @@ import { useCallback, useSyncExternalStore } from 'react';
 import {
   addJournalEntry,
   loadPracticeState,
+  practiceRevision,
   resetPracticeState,
   savePracticeState,
   setDayNote,
@@ -22,10 +23,12 @@ import {
 import { dayKey } from '../lib/dates';
 import { LS } from '../lib/storage';
 
-/* Снимок стора: пока сырая строка в localStorage не изменилась, отдаём тот же объект
-   (useSyncExternalStore требует стабильного значения между изменениями). */
+/* Снимок стора: пока не изменились ни сырая строка в localStorage, ни ревизия стора,
+   отдаём тот же объект (useSyncExternalStore требует стабильного значения между
+   изменениями). Ревизия нужна на случай запрета localStorage: тогда изменения живут
+   в памяти стора, и сырая строка никогда не меняется. */
 let snapshot: PracticeState | null = null;
-let snapshotRaw: string | null = null;
+let snapshotKey: string | null = null;
 
 function rawPractice(): string | null {
   try {
@@ -36,10 +39,10 @@ function rawPractice(): string | null {
 }
 
 function getSnapshot(): PracticeState {
-  const raw = rawPractice();
-  if (snapshot === null || raw !== snapshotRaw) {
+  const key = practiceRevision() + '|' + (rawPractice() ?? '');
+  if (snapshot === null || key !== snapshotKey) {
     snapshot = loadPracticeState();
-    snapshotRaw = raw;
+    snapshotKey = key;
   }
   return snapshot;
 }

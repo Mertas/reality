@@ -3,6 +3,10 @@
  * Используется UI практики (hooks/usePracticeStore) и демо (заметка «смотрящего»
  * сохраняется в дневник). Состояние — ровно как в ванильном js/practice.js:
  * ключ `reality.practice.v1`.
+ *
+ * Если браузер запрещает localStorage (жёсткий приватный режим), стор продолжает
+ * работать в памяти до перезагрузки страницы: изменения публикуются через ревизию
+ * (practiceRevision) и событие reality:practice.
  */
 import { LS, readJson, writeJson } from './storage';
 
@@ -26,6 +30,17 @@ export interface PracticeState {
 
 export const PRACTICE_EVENT = 'reality:practice';
 
+/** Память на случай недоступного localStorage (живёт до перезагрузки страницы). */
+let memoryState: PracticeState | null = null;
+
+/** Ревизия состояния: растёт на каждом сохранении (нужна useSyncExternalStore,
+ *  когда сырая строка localStorage не меняется — например, при запрете записи). */
+let revision = 0;
+
+export function practiceRevision(): number {
+  return revision;
+}
+
 function emptyState(): PracticeState {
   return { v: 1, start: new Date().toISOString(), days: {}, journal: [] };
 }
@@ -33,17 +48,21 @@ function emptyState(): PracticeState {
 export function loadPracticeState(): PracticeState {
   const s = readJson<PracticeState | null>(LS.practice, null);
   if (!s || typeof s !== 'object' || !s.days || !Array.isArray(s.journal)) {
-    return emptyState();
+    return memoryState ?? emptyState();
   }
-  return {
+  const normalized: PracticeState = {
     v: 1,
     start: typeof s.start === 'string' ? s.start : new Date().toISOString(),
     days: s.days,
     journal: s.journal,
   };
+  memoryState = normalized;
+  return normalized;
 }
 
 export function savePracticeState(state: PracticeState): void {
+  memoryState = state;
+  revision += 1;
   writeJson(LS.practice, state);
   try {
     window.dispatchEvent(new CustomEvent(PRACTICE_EVENT));

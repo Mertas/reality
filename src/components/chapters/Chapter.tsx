@@ -7,15 +7,18 @@ interface ChapterProps {
   num?: string;
   kicker: string;
   title: string;
+  /** Уровень заголовка: 1 — только для первой главы (на странице один h1). */
+  level?: 1 | 2;
   children: ReactNode;
 }
 
-export function Chapter({ id, num, kicker, title, children }: ChapterProps) {
+export function Chapter({ id, num, kicker, title, level = 2, children }: ChapterProps) {
+  const Heading = level === 1 ? 'h1' : 'h2';
   return (
     <section className="chapter" id={id}>
       {num && num !== '0' ? <div className="ch-num">{num}</div> : null}
       <p className="kicker">{kicker}</p>
-      <h2>{title}</h2>
+      <Heading>{title}</Heading>
       <Reveal>{children}</Reveal>
     </section>
   );

@@ -254,7 +254,7 @@ main {
   margin: 0 0 14px;
 }
 
-.chapter h2 {
+.chapter h1, .chapter h2 {
   font-size: clamp(27px, 3.6vw, 42px);
   line-height: 1.16;
   font-weight: 600;

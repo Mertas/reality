@@ -29,7 +29,7 @@ function promptAt(slot: PromptSlot, shift: number): PromptView {
 }
 
 export function JournalSection({ store, resetSignal, onStatus }: JournalSectionProps) {
-  const { state, addEntry, removeEntry } = store;
+  const { state, addEntry, removeEntry, storageOk } = store;
   const [draft, setDraft] = useState('');
   const [shift, setShift] = useState(0);
   const [armed, setArmed] = useState<number | null>(null);
@@ -54,7 +54,11 @@ export function JournalSection({ store, resetSignal, onStatus }: JournalSectionP
     addEntry(prompt.text, text);
     setDraft('');
     setShift((value) => value + 1);
-    onStatus('Запись сохранена.');
+    onStatus(
+      storageOk
+        ? 'Запись сохранена.'
+        : 'Запись сохранена — в этом браузере она живёт до перезагрузки страницы.',
+    );
   };
 
   const remove = (index: number): void => {
